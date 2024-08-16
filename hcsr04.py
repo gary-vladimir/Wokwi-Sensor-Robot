@@ -33,3 +33,8 @@ class HCSR04:
             if ex.args[0] == 110:  # 110 = ETIMEDOUT
                 raise OSError("Out of range")
             raise ex
+
+    def distance_cm(self):
+        pulse_time = self._send_pulse_and_wait()
+        cms = int((pulse_time / 2) // 29.1)
+        return cms
