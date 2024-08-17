@@ -7,5 +7,9 @@ class Button:
         self.pin = Pin(pin, mode=Pin.IN)
 
     def is_pressed(self):
-        print(self.pin.value())
         return self.pin.value() == 1
+
+    def wait_button_press(self):
+        while self.is_pressed() == False:
+            sleep(0.01)
+        return
