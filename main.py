@@ -1,15 +1,21 @@
+from machine import SoftI2C, Pin, time_pulse_us
 from led import LED
 from button import Button
 from buzzer import Buzzer
 from stepper import Stepper
 from utime import sleep
+from hcsr04 import HCSR04
+import oled
 
 my_led = LED(12)
 my_btn = Button(27)
 my_buzz = Buzzer(15)
 leftWheel = Stepper(13, 14)
 rightWheel = Stepper(19, 18)
+ultrasonic = HCSR04(5, 17)
 
+i2c = SoftI2C(scl=Pin(22), sda=Pin(21))
+oled = oled.I2C(128, 64, i2c)
 
 my_led.on()
 my_btn.wait_button_press()
@@ -19,6 +25,23 @@ my_buzz.beep_once()
 for i in range(20):
     leftWheel.move_one_step(1)
     rightWheel.move_one_step(1)
+
+my_btn.wait_button_press()
+
+for i in range(20):
+    leftWheel.move_one_step(0)
+    rightWheel.move_one_step(0)
+
+my_btn.wait_button_press()
+
+while True:
+    distance_cm = ultrasonic.distance_cm()
+
+    oled.clear()
+    oled.text("Distance: " + str(distance_cm), 10, 3)
+    oled.show()
+
+    sleep(0.1)
 
 """
 while True:
