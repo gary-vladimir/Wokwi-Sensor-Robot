@@ -6,6 +6,7 @@ from stepper import Stepper
 from utime import sleep
 from hcsr04 import HCSR04
 import oled
+import mpu6050
 
 my_led = LED(12)
 my_btn = Button(27)
@@ -16,6 +17,7 @@ ultrasonic = HCSR04(5, 17)
 
 i2c = SoftI2C(scl=Pin(22), sda=Pin(21))
 oled = oled.I2C(128, 64, i2c)
+mpu = mpu6050.accel(i2c)
 
 my_led.on()
 my_btn.wait_button_press()
@@ -35,10 +37,10 @@ for i in range(20):
 my_btn.wait_button_press()
 
 while True:
-    distance_cm = ultrasonic.distance_cm()
-
+    values = mpu.get_values()
+    acy = values["AcY"] / 16384
     oled.clear()
-    oled.text("Distance: " + str(distance_cm), 10, 3)
+    oled.text(str(acy), 10, 3)
     oled.show()
 
     sleep(0.1)
