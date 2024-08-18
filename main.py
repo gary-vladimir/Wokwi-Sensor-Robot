@@ -19,38 +19,53 @@ i2c = SoftI2C(scl=Pin(22), sda=Pin(21))
 oled = oled.I2C(128, 64, i2c)
 mpu = mpu6050.accel(i2c)
 
-my_led.on()
-my_btn.wait_button_press()
-my_led.off()
-my_buzz.beep_once()
 
-for i in range(20):
-    leftWheel.move_one_step(1)
-    rightWheel.move_one_step(1)
+def get_steps_from_distance(distance):
+    wheelDiameter = 6  # cm
+    wheelPerimeter = wheelDiameter * 3.141519
+    return distance * 200 / wheelPerimeter
 
-my_btn.wait_button_press()
-
-for i in range(20):
-    leftWheel.move_one_step(0)
-    rightWheel.move_one_step(0)
-
-my_btn.wait_button_press()
 
 while True:
-    values = mpu.get_values()
-    acy = values["AcY"] / 16384
-    oled.clear()
-    oled.text(str(acy), 10, 3)
-    oled.show()
-
-    sleep(0.1)
-
-"""
-while True:
-  if my_btn.is_pressed():
-    my_led.on()
-    my_buzz.beep_once()
-  else:
     my_led.off()
+    oled.clear()
+    oled.text("Press button", 1, 2)
+    oled.text("To Start", 1, 3)
+    oled.show()
+    my_btn.wait_button_press()
+    my_buzz.beep_once()
+    distance = ultrasonic.distance_cm()
+    oled.clear()
+    oled.text(str(distance) + "cm", 10, 2)
+    target_steps = get_steps_from_distance(distance)
+    oled.text("Steps> " + str(target_steps), 10, 3)
+    oled.show()
+    current_steps = 0
+    success = True
 
-"""
+    while current_steps < target_steps:
+        values = mpu.get_values()
+        if values["AcY"] > 12000 or values["AcY"] < -12000:
+            success = False
+            break
+        leftWheel.move_one_step(0)
+        rightWheel.move_one_step(1)
+        current_steps += 1
+
+    if success:
+        my_buzz.beep_once()
+        oled.clear()
+        oled.text("REACHED", 10, 3)
+        oled.show()
+    else:
+        my_led.on()
+        oled.clear()
+        oled.text("TILTED", 10, 3)
+        oled.show()
+        my_buzz.beep_once()
+        sleep(0.2)
+        my_buzz.beep_once()
+        sleep(0.2)
+        my_buzz.beep_once()
+
+    sleep(2)
